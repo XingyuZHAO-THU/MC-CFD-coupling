@@ -1,0 +1,6 @@
+rc Singlepin.cas.h5
+solve/in/in-flow
+solve/iterate 500
+wd Singlepin.dat.h5
+OK
+exit

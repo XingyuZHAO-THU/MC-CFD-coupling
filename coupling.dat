@@ -1,0 +1,71 @@
+10
+0.0047
+0.0
+0.0
+0.0
+0.0
+800
+750
+750
+600
+1000
+
+#Project Name [RMC input card name [split with space] Fluent case name, no ext]
+Singlepin Singlepin
+
+#Coupling mode [0 = steady state, 1 = transient]
+0
+
+#time step [step size [s], total time [s], substep for Neu, substep for th, max inner iteration step for th]
+1 5 100 50 100
+
+#DIM
+8 8 100
+
+#OUTDIMF
+8 8 100
+
+#OUTDIMC
+8 8 100
+
+#OUTDIMM
+1 1 100
+
+#OUTDIMR
+1 1 100
+
+#P_bndry in [cm] {xmin xmax ymin ymax zmin zmax}
+-0.75 0.75 -0.75 0.75 0 20
+
+#F_bndry in [m] {xmin xmax ymin ymax zmin zmax}
+-0.0075 0.0075 -0.0075 0.0075 0 0.2
+
+#C_bndry in [m] {xmin xmax ymin ymax zmin zmax}
+-0.0075 0.0075 -0.0075 0.0075 0 0.2
+
+#M_bndry in [m] {xmin xmax ymin ymax zmin zmax}
+-0.0075 0.0075 -0.0075 0.0075 0 0.2
+
+#R_bndry in [m] {xmin xmax ymin ymax zmin zmax}
+-0.0075 0.0075 -0.0075 0.0075 0 0.2
+
+#Multilevel Flag = 1
+
+###### Re-compile required if anything changes above this line #######
+
+#Omega = 0.5
+
+#SOR flag for th_calculation = 0
+
+#Residual factor = 3.0
+
+#tmax discrepancy tolerance = 0.001
+
+#Parallel processes for RMC = 64
+
+#Parallel processes for Fluent = 64
+
+#Output all iter flag = 1
+
+#Coupling order [only matters for transient calculation! 0: start with MC; 1: start with CFD; default: start with MC]
+0
