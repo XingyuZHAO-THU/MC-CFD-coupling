@@ -3,17 +3,19 @@
 ## 1. Introduction
 ### 1.1 Overview
 This program implements high-fidelity steady-state and transient Neutron/Thermal-hydraulics coupling between RMC and ANSYS Fluent. 
-- RMC is a 3D neutron transport code for reactors based on the Monte Carlo method
+- RMC is a 3D neutron transport code for reactors based on the Monte Carlo method.
 - ANSYS Fluent is a CFD-based thermal-hydraulics code.
 
-Theoretically, this program can be quickly applied to reactors with any geometric structure.
+Theoretically, this program can be quickly applied to any type of reactors with various geometries and materials.
 ### 1.2 Prerequisites
+* Operating System Requirements: CentOS 7, Ubuntu 22.04, or higher versions of Linux distributions. This version cannot run directly on Windows systems，where modifications and adaptations are required.
 * RMC 3.5.0 or higher, available upon resonable requests from the **'REAL'** group of the Department of Engineering Physics, Tsinghua University at http://reallab.ep.tsinghua.edu.cn.
 * ANSYS Fluent 2021 R1 **(recommended)** or higher.
-* hdf5, the version must be consistent with the RMC compilation environment and ANSYS Fluent’s hdf5 architecture, **v1.10.5 is recommended**.
-* cmake, version 3.26.0 or higher is recommended.
+* hdf5, the version must be consistent with the RMC compilation dependencies and ANSYS Fluent’s hdf5 architecture, **v1.10.5 is recommended**.
+* mpich, v3.2.1 or higher is recommended.
+* cmake, v3.26.0 or higher is recommended.
 ### 1.3 Program Structure
-* The `\lib_h5rw` folder contains the compilation path for the dynamic link libraries needed for external hdf5 read/write.
+* The `\lib_h5rw` folder contains the dynamic link libraries compiling external hdf5 read/write functions.
 * The `\libudf` folder contains the UDF compilation path and library files for Fluent, which are `.dll` and `.lib` on **Windows**, and `.so` on **Linux**.
 * `compile.sh` is the script to compile the above dynamic link libraries on Linux.
 * `init.py` is the coupling initialization script.
@@ -31,21 +33,21 @@ Theoretically, this program can be quickly applied to reactors with any geometri
   
     * *`Large time step transient`, i.e., burn-up calculation, is currently under development.*
   * `#time step` defines the time step settings, **important**: In steady-state, only the 5<sup>th</sup> parameter matters; for transient, all parameters are used:
-    * The 1<sup>st</sup> value is the **transient nuclear-thermal coupling** time step (outer iteration time step), currently only fixed time steps are supported.
-    * The 2<sup>nd</sup> value is the total duration for the **transient nuclear-thermal coupling**.
+    * The 1<sup>st</sup> value is the **transient neutronic-thermal coupling** time step (outer iteration time step), currently only fixed time steps are supported.
+    * The 2<sup>nd</sup> value is the total duration for the **transient neutronic-thermal coupling**.
     * The 3<sup>rd</sup> value is the sub-time step for updating the neutron physics field's point-kinetics parameters, also known as the neutron inner iteration time step.
-    * The 4<sup>th</sup> value is the time step for the **thermo-hydraulic field** transient equations, also known as the thermo-hydraulic inner iteration time step.
-    * The 5<sup>th</sup> value is the maximum iteration count for each time step of the thermo-hydraulic field steady-state or transient equations.
-  * `#DIM` to `#OUTDIMR` define the grid divisions for power, fuel, coolant, moderator, and reflector thermohydraulic parameter transmission in the Cartesian coordinate directions (xyz). Currently, only uniform structured divisions are supported.
-  * `#P_bndry` defines the boundary positions for the power grid, **in cm**.
-  * `#F_bndry` to `#R_bndry` define the boundary positions for different materials’ thermohydraulic parameter transmission grids, **in m**.
-  * `#Multilevel Flag` controls the multiscale model switch with 0 or 1, commonly used for models containing TRISO particles like HTGR.
+    * The 4<sup>th</sup> value is the time step for the **thermo-hydraulic field** transient equations, also known as the thermal-hydraulics inner iteration time step.
+    * The 5<sup>th</sup> value is the maximum iteration for each time step of the thermal-hydraulics field steady-state or transient equations.
+  * `#DIM` to `#OUTDIMR` define the divisions for the meshes that store power distribution, and fuel, coolant, moderator, and reflector thermal parameter distributions in the Cartesian coordinate directions (xyz). Currently, only uniform structured meshes are supported.
+  * `#P_bndry` defines the boundaries for the mesh that stores the power distribution, **in cm**.
+  * `#F_bndry` to `#R_bndry` define the boundaries for meshes that store fuel, coolant, moderator, and reflector thermal parameter distributions, **in m**.
+  * `#Multilevel Flag` controls the multiscale model switch with 0 or 1, commonly used for models containing TRISO particles like HTGRs.
   * `#Omega` is the coupling relaxation factor, typically set to 0.5. **Currently, power is always relaxed**, to avoid relaxation, set this value to 1.
-  * `#SOR flag for th_calculation` defines whether relaxation is applied to thermohydraulic data. **Current research shows little benefit, recommended to disable**.
+  * `#SOR flag for th_calculation` defines whether relaxation is applied to thermal-hydraulics data. **Current research shows little benefit, recommended to disable**.
   * `#Residual factor` is the upper α quantile for power, typically set to 3.0; for complex models, this value can be slightly relaxed.
   * `#tmax discrepancy tolerance` defines the maximum allowable relative temperature error.
   * `#Parallel processes` defines the number of parallel **processes** for both RMC and Fluent. These should not exceed the number of **cores** on your machine, **NOT** threads.
-  * `#Output all iter flag` determines whether to output all iterations unconditionally, i.e., without convergence check.
+  * `#Output all iter flag` determines whether to output all iterations unconditionally, while the convergence will still be output.
   * `#Coupling order` defines the coupling sequence, **only valid for transient**: 0 means start with RMC, 1 means start with Fluent, default is 0.
 ---
 
