@@ -93,7 +93,7 @@ python iter.py
 ---
 ### 2.2 Transient Workflow
 
-1. **Perform steady-state coupling calculation first** (preferably in a separate directory to avoid confusion). Successful steady-state coupling means the model geometry, file reading/writing, memory usage, and UDF are all correct. For transient calculations, the **steady-state coupling *k*~eff~ value must converge within 1-2 standard deviations from 1**.
+1. **Perform steady-state coupling calculation first** (preferably in a separate directory to avoid confusion). Successful steady-state coupling means the model geometry, file reading/writing, memory usage, and UDF are all correct. For transient calculations, the **steady-state coupling *k*<sub>eff</sub> value must converge within 1-2 standard deviations from 1**.
 2. Copy the interface files from the steady-state coupling to the transient coupling working directory.
 3. **Single-physics solution**. Prepare the RMC and Fluent input files.
    * **Neutron Physics**: Prepare `.rmc`, `.innerproduct`, and `.State.h5` format input cards.
