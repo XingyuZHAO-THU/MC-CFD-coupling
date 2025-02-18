@@ -69,14 +69,14 @@ Theoretically, this program can be quickly applied to any type of reactors with 
         watch free -g
         ```
       * After passing the tests, rename the `.rmc` input card. The name (without the extension) must match the project name in `coupling.dat`.
-  * **Thermohydraulic Field**: Prepare a `.cas.h5` format case file.
-    * Prepare the geometry and mesh model files.
-    * Import the Fluent solver, do **NOT** load any UDFs, use **constant heat source**, and set boundary conditions to check if calculations can proceed. This verifies model correctness.
-    * ***Optional***: If material properties are defined with UDFs, compile and load them to verify the property UDFs.
-    * Perform grid independence study and turbulent wall function *y*^+^ verification. 
-      * For the Standard *k*-ε model, it should satisfy 30 < *y*^+^ < 200
-      * For the Standard *k*-ω model, it should satisfy *y*^+^ < 5.
-    * After passing all tests, save the case. **It is recommended to save this case (without UDFs) separately for later use**.
+    * **Thermohydraulic Field**: Prepare a `.cas.h5` format case file.
+      * Prepare the geometry and mesh model files.
+      * Import the Fluent solver, do **NOT** load any UDFs, use **constant heat source**, and set boundary conditions to check if calculations can proceed. This verifies model correctness.
+      * ***Optional***: If material properties are defined with UDFs, compile and load them to verify the property UDFs.
+      * Perform grid independence study and turbulent wall function *y*^+^ verification. 
+        * For the Standard *k*-ε model, it should satisfy 30 < *y*^+^ < 200
+        * For the Standard *k*-ω model, it should satisfy *y*^+^ < 5.
+      * After passing all tests, save the case. **It is recommended to save this case (without UDFs) separately for later use**.
 2. **VERY IMPORTANT:** open the `.cas.h5` in GUI mode and record the **zone ID** of regions corresponding to different materials that need to consider coupling effects. Modify the corresponding lines in `udf.c`.
 3. Open the `coupling.dat` input card, **check and modify the coupling calculation settings line by line**.
 4. Open `iter.py` and **only modify** the file names.
