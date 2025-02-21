@@ -10,7 +10,7 @@ Theoretically, this program can be quickly applied to any type of reactors with 
 ### 1.2 Prerequisites
 * Operating System Requirements: CentOS 7, Ubuntu 22.04, or later versions of Linux distributions. This version cannot run directly on Windows systems，where modifications and adaptations are required.
 * Python 3.11 **(recommend)** or later
-* RMC 3.5.0 or later, available upon resonable requests to the **'REAL'** group of the Department of Engineering Physics, Tsinghua University at http://reallab.ep.tsinghua.edu.cn.
+* RMC 3.5.0 or later, available upon reasonable requests to the **'REAL'** group of the Department of Engineering Physics, Tsinghua University at http://reallab.ep.tsinghua.edu.cn.
 * ANSYS Fluent 2021 R1 **(recommended)** or later.
 * hdf5, the version must be consistent with the RMC compilation dependencies and ANSYS Fluent’s hdf5 architecture, **v1.10.5 is recommended**.
 * mpich, v3.2.1 or later is recommended.
