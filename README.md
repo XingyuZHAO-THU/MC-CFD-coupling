@@ -70,7 +70,7 @@ Theoretically, this program can be quickly applied to any type of reactors with 
         watch free -g
         ```
       * After passing the tests, rename the `.rmc` input card. The name (without the extension) must match the project name in `coupling.dat`.
-    * **Thermohydraulic Field**: Prepare a `.cas.h5` format case file.
+    * **Thermal-hydraulics Field**: Prepare a `.cas.h5` format case file.
       * Prepare the geometry and mesh model files.
       * Import the Fluent solver, do **NOT** load any UDFs, use **constant heat source**, and set boundary conditions to check if calculations can proceed. This verifies model correctness.
       * ***Optional***: If material properties are defined with UDFs, compile and load them to verify the property UDFs.
@@ -103,7 +103,7 @@ python iter.py
      * Open `coupling.dat` and modify the inner iteration time step count for QUASISTATIC_D to maintain a consistent inner iteration step size. For example, if the outer iteration time step is 0.5s or 1s, set the inner iteration count to 50 or 100, so the inner iteration time step is fixed as 0.01s.
   
         *`The selection of coupling outer iteration and neutron inner iteration time steps is still under research`*
-   * **Thermohydraulic Field**: Prepare a `.cas.h5` format case file and a `.dat.h5` format initial condition file.
+   * **Thermal-hydraulics Field**: Prepare a `.cas.h5` format case file and a `.dat.h5` format initial condition file.
      * In the GUI, import the **steady-state case without any UDF** into the Fluent solver and load the converged steady-state CFD result `.dat.h5`. Use **constant heat source and switch to transient mode** to check if calculations can proceed and verify model correctness.
      * Perform Courant number validation for the inner iteration time step. According to the ANSYS Fluent user manual, the maximum Courant number should be between 20-40, and each inner iteration time step should converge within 10 iterations. Ideally, the Courant number should be close to 1.
      * After passing all tests, **compile and load UDFs, and save**. Since transient calculations are based on steady-state calculations, do not modify any data transmission grid settings, so no UDF modification is needed. Simply compile and load.
