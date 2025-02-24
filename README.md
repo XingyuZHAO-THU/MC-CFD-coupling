@@ -9,7 +9,7 @@ This program implements high-fidelity steady-state and transient Neutron/Thermal
 Theoretically, this program can be quickly applied to any type of reactors with various geometries and materials.
 ### 1.2 Prerequisites
 * Operating System Requirements: CentOS 7, Ubuntu 22.04, or later versions of Linux distributions. This version cannot run directly on Windows systems，where modifications and adaptations are required.
-* Python 3.11 **(recommend)** or later
+* Python 3.7 **(recommend)** or later
 * RMC 3.5.0 or later, available upon reasonable requests to the **'REAL'** group of the Department of Engineering Physics, Tsinghua University at http://reallab.ep.tsinghua.edu.cn.
 * ANSYS Fluent 2021 R1 **(recommended)** or later.
 * hdf5, the version must be consistent with the RMC compilation dependencies and ANSYS Fluent’s hdf5 architecture, **v1.10.5 is recommended**.
@@ -108,7 +108,7 @@ python iter.py
      * Perform Courant number validation for the inner iteration time step. According to the ANSYS Fluent user manual, the maximum Courant number should be between 20-40, and each inner iteration time step should converge within 10 iterations. Ideally, the Courant number should be close to 1.
      * After passing all tests, **compile and load UDFs, and save**. Since transient calculations are based on steady-state calculations, do not modify any data transmission grid settings, so no UDF modification is needed. Simply compile and load.
      * Copy the converged `.dat.h5` format CFD result file from steady-state coupling to the transient coupling working directory **to be used as the initial condition**. Since `.dat.h5` will be overwritten during transient calculations, **rename the `.dat.h5` file**, for example, `pin_init.dat.h5`.
-4. Copy the converged power and thermohydraulic data transfer files from steady-state coupling, such as `MeshTally1.h5`, `info_fuel.h5`, to the transient coupling working directory.
+4. Copy the converged power and thermal-hydraulics data transfer files from steady-state coupling, such as `MeshTally1.h5`, `info_fuel.h5`, to the transient coupling working directory.
 5. Open the `coupling.dat` input card, **check and modify the coupling calculation settings line by line**.
 6. Open `iter.py` and **only modify** the file names for archiving.
 7. Currently, the transient coupling working directory should contain all interface files for the project, `.rmc` and `.cas.h5` files, and the eight files including initial conditions: `.innerproduct`, `_init.State.h5`, `MeshTally1.h5`, `_init.dat.h5`, `info_fuel.h5`, and others. Run:
