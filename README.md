@@ -8,8 +8,9 @@ This program implements high-fidelity steady-state and transient Neutron/Thermal
 
 Theoretically, this program can be quickly applied to any type of reactors with various geometries and materials.
 ### 1.2 Prerequisites
-* Operating System Requirements: CentOS 7, Ubuntu 22.04, or later versions of Linux distributions. This version cannot run directly on Windows systems，where modifications and adaptations are required.
-* Python 3.7 **(recommend)** or later
+* Operating System Requirements: CentOS 7, Ubuntu 22.04, or later versions of Linux distributions. This version cannot run directly on Windows systems, where modifications and adaptations are required.
+* g++ compiler 11.2.0 **(recommended)** or later
+* Python 3.7 **(recommended)** or later
 * RMC 3.5.0 or later, available from the **Reactor Engineering Analysis Laboratory (REAL)** of the Department of Engineering Physics, Tsinghua University at http://reallab.ep.tsinghua.edu.cn, or directly from the director of the lab, wangkan@mail.tsinghua.edu.cn.
 * ANSYS Fluent 2021 R1 **(recommended)** or later.
 * hdf5, the version must be consistent with the RMC compilation dependencies and ANSYS Fluent’s hdf5 architecture, **v1.10.5 is recommended**.

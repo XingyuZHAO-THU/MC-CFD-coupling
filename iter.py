@@ -105,6 +105,8 @@ def steady_state_cal():
     keff_re_diff = []               # [MC parameter, scalar] keff relative difference list
     tmax = []                       # [CFD parameter, scalar] tmax list
     tmax_re_diff = []               # [CFD parameter, scalar] tmax relative difference list
+    tave = []                       # [CFD parameter, scalar] tave list
+    tave_re_diff = []               # [CFD parameter, scalar] tave relative difference list
 
     # Step.IV. Repetitively run neutron physics and thermal-hydraulic procedures, documentation, and relaxation iteration, and the first coupling cannot be relaxed
     while i <= max_iter and (all_iter_flag == 1 or not converge):
@@ -115,7 +117,7 @@ def steady_state_cal():
 
         # Step.IV.2. run Fluent with post process
         os.system(run_CFD)
-        th_converge = CFD_post(i, destination_folder, thermal_files, tmax, tmax_re_diff)
+        th_converge = CFD_post(i, destination_folder, thermal_files, tmax, tmax_re_diff, tave, tave_re_diff)
 
         # Step.IV.3. Coupling converges if and only if all the vectors and scalars of MC and CFD converge
         converge = n_k_converge * n_P_converge * th_converge
@@ -129,14 +131,14 @@ def steady_state_cal():
             else:
                 print(f"\nWarning: File {file} does not exist and will be skipped, please check the name.\n")
 
+        os.system('rm -f *.trn')
         i += 1
 
     # Step.V. Output coupling results such as the residuals
-    Picard_output(i, destination_folder, L2_norm, Linf, re_ave, keff, std, keff_re_diff, tmax, tmax_re_diff)
+    Picard_output(i, destination_folder, L2_norm, Linf, re_ave, keff, std, keff_re_diff, tmax, tmax_re_diff, tave, tave_re_diff)
 
     # Step.VI. Save coupling.dat and clean up temporary files in the working path
     shutil.copyfile(os.path.join(script_dir, 'coupling.dat'), os.path.join(destination_folder, 'coupling.dat'))
-    os.system('rm -f *.trn')
     os.system('ls *.h5 | grep -v ".cas.h5$" | xargs rm -f')
     os.system(f'ls {name[0]}* | egrep -v "(.rmc$|.cas.h5$)" | xargs rm -f')
 
@@ -243,6 +245,7 @@ def transient():
     keff_time = []
     reactivity_time = []
     tmax_time = []
+    tave_time = []
 
     time.append(t)
     iteration_step.append(0)
@@ -252,6 +255,7 @@ def transient():
     reactivity_time.append(0.0)
     with h5py.File(os.path.join(script_dir, "info_fuel.h5"), "r") as source_file:
         tmax_time.append(source_file["temp_fuel_max"][()])
+        tave_time.append(source_file["temp_fuel_average"][()])
 
     while (t + deltat) <= max_time:
         i = 1  # Reset the Picard iteration step count
@@ -273,6 +277,8 @@ def transient():
         keff_re_diff = []               # [MC parameter, scalar] keff relative difference list
         tmax = []                       # [CFD parameter, scalar] tmax list
         tmax_re_diff = []               # [CFD parameter, scalar] tmax relative difference list
+        tave = []                       # [CFD parameter, scalar] tave list
+        tave_re_diff = []               # [CFD parameter, scalar] tave relative difference list
 
         # Step.V. Picard iteration in a single time step, which degenerates to a single step method when max_iter=1
         while i <= max_iter and (all_iter_flag == 1 or not converge):
@@ -286,12 +292,12 @@ def transient():
 
                 # Step.V.2. run Fluent with post process
                 os.system(run_CFD)
-                th_converge = CFD_post(i, current_timestep_path, thermal_files, tmax, tmax_re_diff)  # i and path are input parameters, and the rest of the list is updated
+                th_converge = CFD_post(i, current_timestep_path, thermal_files, tmax, tmax_re_diff, tave, tave_re_diff)  # i and path are input parameters, and the rest of the list is updated
 
             elif order_flag == 1:
                 # Step.V.1. run Fluent with post process
                 os.system(run_CFD)
-                th_converge = CFD_post(i, current_timestep_path, thermal_files, tmax, tmax_re_diff)  # i and path are input parameters, and the rest of the list is updated
+                th_converge = CFD_post(i, current_timestep_path, thermal_files, tmax, tmax_re_diff, tave, tave_re_diff)  # i and path are input parameters, and the rest of the list is updated
 
                 # Step.V.2. run RMC with post process
                 shutil.copyfile(os.path.join(script_dir, f'{name[0]}_init.rmc.State.h5'), os.path.join(script_dir, f'{name[0]}.rmc.State.h5'))
@@ -310,11 +316,11 @@ def transient():
                     shutil.copyfile(os.path.join(script_dir, file), os.path.join(current_timestep_path, f"{file_name}_iter{i}{file_ext}"))
                 else:
                     print(f"\nWarning: File {file} does not exist and will be skipped, please check the name.\n")
-
+            os.system('rm -f *.trn')
             i += 1
 
         # Step.VII. Output, and store coupling results such as the residuals of the single time step
-        Picard_output(i, current_timestep_path, L2_norm, Linf, re_ave, keff, std, keff_re_diff, tmax, tmax_re_diff)
+        Picard_output(i, current_timestep_path, L2_norm, Linf, re_ave, keff, std, keff_re_diff, tmax, tmax_re_diff, tave, tave_re_diff)
 
         t += deltat
         n += 1
@@ -326,6 +332,7 @@ def transient():
         with h5py.File(os.path.join(script_dir, f"{name[0]}.rmc.State.h5"), "r") as source_file:
             reactivity_time.append(source_file["kinetics/reactivity"][()])
         tmax_time.append(tmax[-1])
+        tave_time.append(tave[-1])
 
         # Step.VIII. Replace the initial condition of the next time step with the end condition of the current time step, and
         # it is not advisable to delete the _init file after the last time step because you may have to consider subsequent transient calculations
@@ -334,10 +341,9 @@ def transient():
 
     # Step.IX. Output result variations with time
     transient_output(n, destination_folder, time, iteration_step, power_time, power_re_factor_time, keff_time,
-                     reactivity_time, tmax_time, deltat, max_time, Nneu, Nth, max_inner_th_step)
+                     reactivity_time, tmax_time, tave_time, deltat, max_time, Nneu, Nth, max_inner_th_step)
     # Step.X. Save coupling.dat and clean up temporary files in the working path
     shutil.copyfile(os.path.join(script_dir, 'coupling.dat'), os.path.join(destination_folder, 'coupling.dat'))
-    os.system('rm -f *.trn')
     os.system('ls *.h5 | grep -v ".cas.h5$" | xargs rm -f')
     os.system(f'ls {name[0]}* | egrep -v "(.rmc$|.cas.h5$)" | xargs rm -f')
 
@@ -430,7 +436,7 @@ def transient_power_update(init_power, init_power_factor):
     return current_power
 
 
-def CFD_post(i, path, thermal_files, tmax, tmax_re_diff):
+def CFD_post(i, path, thermal_files, tmax, tmax_re_diff, tave, tave_re_diff):
     # The archiving and relaxation of the thermal hydraulic calculation results, relaxation is NOT recommended
     # Archive the power file before relaxation
     for file in thermal_files:
@@ -446,6 +452,12 @@ def CFD_post(i, path, thermal_files, tmax, tmax_re_diff):
             tmax_re_diff.append(1)
         else:
             tmax_re_diff.append(abs(tmax[i-1]-tmax[i-2])/tmax[i-2])
+        current_t = source_file["temp_fuel_average"][()]
+        tave.append(current_t)
+        if i == 1:
+            tave_re_diff.append(1)
+        else:
+            tave_re_diff.append(abs(tave[i-1]-tave[i-2])/tave[i-2])
 
     # !!!!!!!!!!!!!!!!!!!!!!  CONVERGENCE CRITERIA  !!!!!!!!!!!!!!!!!!!!!! #
     th_converge = tmax_re_diff[i-1] <= epsilon_t
@@ -532,13 +544,14 @@ def CFD_post(i, path, thermal_files, tmax, tmax_re_diff):
     return th_converge
 
 
-def Picard_output(i, path, L2_norm, Linf, re_ave, keff, std, keff_re_diff, tmax, tmax_re_diff):
+def Picard_output(i, path, L2_norm, Linf, re_ave, keff, std, keff_re_diff, tmax, tmax_re_diff, tave, tave_re_diff):
     save_path = os.path.join(path, 'results.dat')
     iter_list = np.array([x for x in range(2, i)]).astype(int)
     P_data = np.column_stack((iter_list, L2_norm, Linf, re_ave))
     iter_list = np.array([x for x in range(1, i)]).astype(int)
     keff_data = np.column_stack((iter_list, keff, std, keff_re_diff))
     tmax_data = np.column_stack((iter_list, tmax, tmax_re_diff))
+    tave_data = np.column_stack((iter_list, tave, tave_re_diff))
     with open(save_path, 'w') as f:
         f.write(f'\nCalculation mode is [{"Steady state" if not (mode) else "Transient"}]\n')
         f.write(f'\nOmega = {Omega}\n')
@@ -549,8 +562,8 @@ def Picard_output(i, path, L2_norm, Linf, re_ave, keff, std, keff_re_diff, tmax,
             f.write(f"\nAll {max_iter} iterations are forced to be calculated\n")
         else:
             if i <= max_iter:
-                print(f"\nConverged at iteration {i}\n")
-                f.write(f"\nConverged at iteration {i}\n")
+                print(f"\nConverged at iteration {i-1}\n")
+                f.write(f"\nConverged at iteration {i-1}\n")
             else:
                 print(f"\nHave not converged until iter {max_iter}\n")
                 f.write(f"\nHave not converged until iter {max_iter}\n")
@@ -560,20 +573,22 @@ def Picard_output(i, path, L2_norm, Linf, re_ave, keff, std, keff_re_diff, tmax,
         np.savetxt(f, keff_data, fmt='%d          %.6f    %.6f    %.6f')
         f.write('\n\niter    tmax      tmax_re_difference\n')
         np.savetxt(f, tmax_data, fmt='%d          %.4f    %.4f')
+        f.write('\n\niter    tave      tave_re_difference\n')
+        np.savetxt(f, tave_data, fmt='%d          %.4f    %.4f')
 
 
 def transient_output(n, path, time, iteration_step, power_time, power_re_factor_time, keff_time,
-                     reactivity_time, tmax_time, deltat, max_time, Nneu, Nth, max_inner_th_step):
+                     reactivity_time, tmax_time, tave_time, deltat, max_time, Nneu, Nth, max_inner_th_step):
     save_path = os.path.join(path, 'transient_results.dat')
     iter_list = np.array([x for x in range(0, n)]).astype(int)
-    transient_data = np.column_stack((iter_list, time, iteration_step, power_time, power_re_factor_time, keff_time, reactivity_time, tmax_time))
+    transient_data = np.column_stack((iter_list, time, iteration_step, power_time, power_re_factor_time, keff_time, reactivity_time, tmax_time, tave_time))
     with open(save_path, 'w') as f:
         f.write('\nTransient results\n')
         f.write(f'\nTime step size = {deltat} s, maximum time = {max_time} s\n')
         f.write(f'\nMC subtimestep number = {Nneu}, CFD subtimestep number = {Nth}, maximum iteration per CFD subtimestep = {max_inner_th_step}\n')
         f.write('\nstep        time        Converge at Picard iteration        power, MW\
-        power factor        keff        reactivity        maximum temperature, K\n')
-        np.savetxt(f, transient_data, fmt='%d           %.4f           %d           %.6f           %.6f           %.6f           %.6f           %.4f')
+        power factor        keff        reactivity        maximum temperature, K        average fuel temperature, K\n')
+        np.savetxt(f, transient_data, fmt='%d           %.4f           %d           %.6f           %.6f           %.6f           %.6f           %.4f           %.4f')
 
 
 if mode == 0:

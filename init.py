@@ -253,6 +253,7 @@ if mode == 0:
     file_fuel.create_dataset('/temp_fuel', data=data_fuel, dtype=np.float64)
 
     file_fuel.create_dataset('/temp_fuel_max', data=float(lines[6]), dtype=np.float64)
+    file_fuel.create_dataset('/temp_fuel_average', data=float(lines[6]), dtype=np.float64)
 
     if flag == 1:
         for i in range(1, 6):

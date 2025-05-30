@@ -119,7 +119,7 @@ void ReadRMCPowerTally(double b[], double p[])
 	status = H5Fclose(file);
 }
 
-void WriteFuelData(double data[], double t)
+void WriteFuelData(double data[], double t1, double t2)
 {
 	hid_t file, dataset;
 	herr_t status;
@@ -148,7 +148,9 @@ void WriteFuelData(double data[], double t)
 
 	status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data3D[0][0][0]);
 	dataset = H5Dopen(file, "/temp_fuel_max", H5P_DEFAULT);
-	status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &t);
+	status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &t1);
+	dataset = H5Dopen(file, "/temp_fuel_average", H5P_DEFAULT);
+	status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &t2);
 
 	status = H5Dclose(dataset);
 	status = H5Fclose(file);
@@ -158,7 +160,7 @@ void WriteFuelData(double data[], double t)
 	free(data1D);
 }
 
-void WriteFuelData_Multilevel(double data1[], double data2[], double t)
+void WriteFuelData_Multilevel(double data1[], double data2[], double t1, double t2)
 {
 	hid_t file, dataset;
 	herr_t status;
@@ -285,7 +287,9 @@ void WriteFuelData_Multilevel(double data1[], double data2[], double t)
 	dataset = H5Dopen(file, "/temp_fuel5", H5P_DEFAULT);
 	status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &F5_data[0][0][0]);
 	dataset = H5Dopen(file, "/temp_fuel_max", H5P_DEFAULT);
-	status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &t);
+	status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &t1);
+	dataset = H5Dopen(file, "/temp_fuel_average", H5P_DEFAULT);
+	status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &t2);
 
 	status = H5Dclose(dataset);
 	status = H5Fclose(file);
