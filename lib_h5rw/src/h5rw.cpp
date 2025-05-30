@@ -28,7 +28,7 @@
 
 double lambda1(double T, double R, double q)
 {
-    double knew, kold, k1d, k1p, k2p, k4r, k0, Tave;
+	double knew, kold, k1d, k1p, k2p, k4r, k0, Tave;
 	double tal = 0.001;
 	double p = 0.05;
 	knew = 5.0;
@@ -174,7 +174,7 @@ void WriteFuelData_Multilevel(double data1[], double data2[], double t1, double 
 	for (int j = 0; j < OUTDIMF0; j++) {
 		F_data[j] = &F_data2D[j * (int)OUTDIMF1];
 	}
-    double*** power_data = (double***)malloc((size_t)OUTDIMF0 * sizeof(double**));
+	double*** power_data = (double***)malloc((size_t)OUTDIMF0 * sizeof(double**));
 	double** power_data2D = (double**)malloc((size_t)OUTDIMF0 * (size_t)OUTDIMF1 * sizeof(double*));
 	double* power_data1D = (double*)malloc((size_t)OUTDIMF0 * (size_t)OUTDIMF1 * (size_t)OUTDIMF2 * sizeof(double));
 	for (int i = 0; i < OUTDIMF0 * OUTDIMF1; i++) {
@@ -229,10 +229,10 @@ void WriteFuelData_Multilevel(double data1[], double data2[], double t1, double 
 		F5_data[j] = &F5_data2D[j * (int)OUTDIMF1];
 	}
 
-    double r1 = 0.00025, r2 = 0.000345, r3 = 0.000385, r4 = 0.00042, r5 = 0.00046;
-    double T1, T2, T3, T4, T5, Tave;
-    double k1, k4;
-    double k2 = 0.5, k3 = 4.0, k5 = 4.0;
+	double r1 = 0.00025, r2 = 0.000345, r3 = 0.000385, r4 = 0.00042, r5 = 0.00046;
+	double T1, T2, T3, T4, T5, Tave;
+	double k1, k4;
+	double k2 = 0.5, k3 = 4.0, k5 = 4.0;
 
 	//Write HDF5 file for fuel
 	file = H5Fopen("info_fuel.h5", H5F_ACC_RDWR, H5P_DEFAULT);
