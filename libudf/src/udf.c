@@ -619,7 +619,7 @@ DEFINE_EXECUTE_AT_END(cal_th)
 		free(temp_reflector);
 		free(dens_fluid);
 
-		Message("\nThermal-hydraulics data post process done, current maximum temperature = %lf, FROM HOST\n\n", tmax);
+		Message("\nThermal-hydraulics data post process done, current maximum temperature = %lf K, current average fuel temperature = %lf K, FROM HOST\n\n", tmax, tave);
 	#endif // RP_HOST
 
 	#if !RP_HOST

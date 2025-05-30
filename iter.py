@@ -280,6 +280,29 @@ def transient():
         tave = []                       # [CFD parameter, scalar] tave list
         tave_re_diff = []               # [CFD parameter, scalar] tave relative difference list
 
+        '''# Rod ejection accident, update the RMC input card
+        # !!!!!!!!!!!!!!!!!!!! control rod ejection velocity, change this, always use [), velocity in [cm/s] !!!!!!!!!!!!!!!!!!!!
+        if 0.0 <= t < 0.99:
+            ctrl_v = 30.5
+        else:
+            ctrl_v = 0.0
+
+        if ctrl_v != 0:           # only update when the velocity is non-zero
+            ctrl_height += ctrl_v * deltat
+            rmc_input_path = os.path.join(script_dir, f'{name[0]}.rmc')  # .rmc file path
+            temp_file_path = rmc_input_path + '.tmp'                     # Temporal file for modifying
+            with open(rmc_input_path, 'r', encoding='utf-8') as rmc_file, open(temp_file_path, 'w', encoding='utf-8') as temp_file:
+                for line in rmc_file:
+                    if line.startswith('surf 10  pz'):
+                        temp_file.write(f'surf 10  pz  {ctrl_height}           // Fully inserted,  [require modifying]\n')
+                    else:
+                        temp_file.write(line)
+            shutil.copyfile(temp_file_path, rmc_input_path)  # Forcefully replace original file
+            os.remove(temp_file_path)  # Delete temporal file
+            print(f"current control rod height = {ctrl_height} cm, velocity = {ctrl_v} cm/s, rmc input card updated")
+        else:
+            print(f"current control rod height remains {ctrl_height} cm, velocity = {ctrl_v} cm/s, rmc input card is not updated")'''
+
         # Step.V. Picard iteration in a single time step, which degenerates to a single step method when max_iter=1
         while i <= max_iter and (all_iter_flag == 1 or not converge):
 
