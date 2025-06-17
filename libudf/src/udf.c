@@ -462,10 +462,10 @@ DEFINE_EXECUTE_AT_END(cal_th)
 			t = Lookup_Thread(d, ID_fluid[i]);
 			begin_c_loop_int(c, t)
 			{	
-            	C_CENTROID(x, c, t);
-           		ix = GetIndexByPos(C_hx, C_bndry_x[0], C_bndry_x[1], x[0]);
-            	iy = GetIndexByPos(C_hy, C_bndry_y[0], C_bndry_y[1], x[1]);
-            	iz = GetIndexByPos(C_hz, C_bndry_z[0], C_bndry_z[1], x[2]);
+				C_CENTROID(x, c, t);
+				ix = GetIndexByPos(C_hx, C_bndry_x[0], C_bndry_x[1], x[0]);
+				iy = GetIndexByPos(C_hy, C_bndry_y[0], C_bndry_y[1], x[1]);
+				iz = GetIndexByPos(C_hz, C_bndry_z[0], C_bndry_z[1], x[2]);
 				if (ix>=0 && iy>=0 && iz>=0){
 					vol = C_VOLUME(c, t);
 					cnt_vol_fluid[ix+OUTDIMC0*iy+OUTDIMC0*OUTDIMC1*iz] += vol;

@@ -4,6 +4,10 @@ import h5py
 import numpy as np
 import re
 
+lam = np.array([0.0127, 0.0317, 0.1150, 0.3110, 1.4000, 3.8700])
+beta = np.array([0.000215, 0.001424, 0.001274, 0.002568, 0.000748, 0.000273])
+L = 0.00002
+
 # Step.0. Locate current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
@@ -162,11 +166,11 @@ def transient():
                 else:
                     order_flag = 0
         init_power = float(lines[1])
-    with open(os.path.join(script_dir, f'{name[0]}.rmc.innerproduct'), 'r') as init_power_file:
+    '''with open(os.path.join(script_dir, f'{name[0]}.rmc.innerproduct'), 'r') as init_power_file:
         lines = init_power_file.readlines()
         for line in lines:
             if line.startswith('Average total power:'):
-                init_power_factor = float(line.split(':')[-1])
+                init_power_factor = float(line.split(':')[-1])'''
 
     rmc_input_path = os.path.join(script_dir, f'{name[0]}.rmc')  # .rmc file path
     temp_file_path = rmc_input_path + '.tmp'                     # Temporal file for modifying
@@ -223,7 +227,7 @@ def transient():
         f"{name[0]}.rmc.innerproduct",
         # "MeshTally1.h5",
         "MeshTally2.h5",
-        f"{name[1]}.dat.h5"
+        # f"{name[1]}.dat.h5"
     ]
 
     thermal_files = [
@@ -260,6 +264,12 @@ def transient():
         tmax_time.append(source_file["temp_fuel_max"][()])
         tave_time.append(source_file["temp_fuel_average"][()])
 
+    init_params = np.zeros(7)
+    init_params[0] = 1.0
+    for i in range(6):
+        init_params[i + 1] = beta[i] * init_params[0] / (L * lam[i])
+    params = init_params.copy()
+
     while (t + deltat) <= max_time:
         i = 1  # Reset the Picard iteration step count
         converge = False
@@ -282,6 +292,7 @@ def transient():
         tmax_re_diff = []               # [CFD parameter, scalar] tmax relative difference list
         tave = []                       # [CFD parameter, scalar] tave list
         tave_re_diff = []               # [CFD parameter, scalar] tave relative difference list
+        init_params = params.copy()
 
         '''# Rod ejection accident, update the RMC input card
         # !!!!!!!!!!!!!!!!!!!! control rod ejection velocity, change this, always use [), velocity in [cm/s] !!!!!!!!!!!!!!!!!!!!
@@ -314,7 +325,8 @@ def transient():
                 shutil.copyfile(os.path.join(script_dir, f'{name[0]}_init.rmc.State.h5'), os.path.join(script_dir, f'{name[0]}.rmc.State.h5'))
                 os.system(run_MC)
                 n_k_converge, n_P_converge = MC_post(i, current_timestep_path, keff, std, keff_re_diff, L2_norm, Linf, re_ave)  # i and path are input parameters, and the rest of the list is updated
-                current_power = transient_power_update(init_power, init_power_factor)  # Update power and coupling.dat for UDF reading
+                rhow = (keff[-1] - 1) / keff[-1]
+                current_power, params = transient_power_update(init_params, init_power, deltat, rhow)  # Update power and coupling.dat for UDF reading
 
                 # Step.V.2. run Fluent with post process
                 os.system(run_CFD)
@@ -329,7 +341,8 @@ def transient():
                 shutil.copyfile(os.path.join(script_dir, f'{name[0]}_init.rmc.State.h5'), os.path.join(script_dir, f'{name[0]}.rmc.State.h5'))
                 os.system(run_MC)
                 n_k_converge, n_P_converge = MC_post(i, current_timestep_path, keff, std, keff_re_diff, L2_norm, Linf, re_ave)  # i and path are input parameters, and the rest of the list is updated
-                current_power = transient_power_update(init_power, init_power_factor)  # Update power and coupling.dat for UDF reading
+                rhow = (keff[-1] - 1) / keff[-1]
+                current_power, params = transient_power_update(init_params, init_power, deltat, rhow)  # Update power and coupling.dat for UDF reading
 
             # Step.V.3. Coupling converges if and only if all the vectors and scalars of MC and CFD converge
             converge = n_k_converge * n_P_converge * th_converge
@@ -445,21 +458,41 @@ def MC_post(i, path, keff, std, keff_re_diff, L2_norm, Linf, re_ave):
     return n_k_converge, n_P_converge
 
 
-def transient_power_update(init_power, init_power_factor):
-    # Extracts the power factor change from the .innerproduct file and overwrites the coupling input card for the UDF to read
-    with open(os.path.join(script_dir, f'{name[0]}.rmc.innerproduct'), 'r') as current_power_file:
-        lines = current_power_file.readlines()
-        for line in lines:
-            if line.startswith('Average total power:'):
-                current_power_factor = float(line.split(':')[-1])
-    current_power = init_power / init_power_factor * current_power_factor
+def cal_k(x, y, rhow):
+    k = np.zeros(7)
+    sigma = sum(lam[i] * y[i + 1] for i in range(6))
+    k[0] = (rhow - np.sum(beta)) / L * y[0] + sigma
+    for i in range(6):
+        k[i + 1] = beta[i] / L * y[0] - lam[i] * y[i + 1]
+    return k
+
+
+# Runge-Kutta method
+def RungeKutta(x, y, h, rhow):
+    k1 = cal_k(x, y, rhow)
+    k2 = cal_k(x + h / 2, y + k1 * h / 2, rhow)
+    k3 = cal_k(x + h / 2, y + k2 * h / 2, rhow)
+    k4 = cal_k(x + h, y + k3 * h, rhow)
+    y += (k1 + 2 * k2 + 2 * k3 + k4) * h / 6
+    return y
+
+
+def transient_power_update(init_params, init_power, deltat, rhow):
+    h = 0.00001  # the time step for Runge-Kutta method
+    time_point = 0.0
+    current_params = init_params.copy()
+    while (time_point + h) <= deltat:
+        current_params = RungeKutta(time_point, current_params, h, rhow)
+        time_point += h
+    power_factor = current_params[0]
+    current_power = init_power * power_factor
     with open(coupling_path, 'r+') as coupling_file:
         lines = coupling_file.readlines()
         lines[1] = f"{current_power}\n"
         coupling_file.seek(0)
         coupling_file.truncate()
         coupling_file.writelines(lines)
-    return current_power
+    return current_power, current_params
 
 
 def CFD_post(i, path, thermal_files, tmax, tmax_re_diff, tave, tave_re_diff):
