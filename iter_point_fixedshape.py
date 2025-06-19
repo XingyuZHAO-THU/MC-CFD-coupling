@@ -325,7 +325,8 @@ def transient():
                 shutil.copyfile(os.path.join(script_dir, f'{name[0]}_init.rmc.State.h5'), os.path.join(script_dir, f'{name[0]}.rmc.State.h5'))
                 os.system(run_MC)
                 n_k_converge, n_P_converge = MC_post(i, current_timestep_path, keff, std, keff_re_diff, L2_norm, Linf, re_ave)  # i and path are input parameters, and the rest of the list is updated
-                rhow = (keff[-1] - 1) / keff[-1]
+                with h5py.File(os.path.join(script_dir, f"{name[0]}.rmc.State.h5"), "r") as source_file:
+                    rhow = source_file["kinetics/reactivity"][()]
                 current_power, params = transient_power_update(init_params, init_power, deltat, rhow)  # Update power and coupling.dat for UDF reading
 
                 # Step.V.2. run Fluent with post process
@@ -341,7 +342,8 @@ def transient():
                 shutil.copyfile(os.path.join(script_dir, f'{name[0]}_init.rmc.State.h5'), os.path.join(script_dir, f'{name[0]}.rmc.State.h5'))
                 os.system(run_MC)
                 n_k_converge, n_P_converge = MC_post(i, current_timestep_path, keff, std, keff_re_diff, L2_norm, Linf, re_ave)  # i and path are input parameters, and the rest of the list is updated
-                rhow = (keff[-1] - 1) / keff[-1]
+                with h5py.File(os.path.join(script_dir, f"{name[0]}.rmc.State.h5"), "r") as source_file:
+                    rhow = source_file["kinetics/reactivity"][()]
                 current_power, params = transient_power_update(init_params, init_power, deltat, rhow)  # Update power and coupling.dat for UDF reading
 
             # Step.V.3. Coupling converges if and only if all the vectors and scalars of MC and CFD converge
