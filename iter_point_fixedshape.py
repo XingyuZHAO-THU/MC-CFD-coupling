@@ -172,7 +172,7 @@ def transient():
             if line.startswith('Average total power:'):
                 init_power_factor = float(line.split(':')[-1])'''
 
-    rmc_input_path = os.path.join(script_dir, f'{name[0]}.rmc')  # .rmc file path
+    '''rmc_input_path = os.path.join(script_dir, f'{name[0]}.rmc')  # .rmc file path
     temp_file_path = rmc_input_path + '.tmp'                     # Temporal file for modifying
     with open(rmc_input_path, 'r', encoding='utf-8') as rmc_file, open(temp_file_path, 'w', encoding='utf-8') as temp_file:
         for line in rmc_file:
@@ -183,7 +183,7 @@ def transient():
             else:
                 temp_file.write(line)
     shutil.copyfile(temp_file_path, rmc_input_path)  # Forcefully replace original file
-    os.remove(temp_file_path)  # Delete temporal file
+    os.remove(temp_file_path)  # Delete temporal file'''
 
     jou_path = os.path.join(script_dir, f'runFluent{mode}.jou')  # runFluent1.jou path
     temp_file_path = jou_path + '.tmp'  # Temporal file for modifying
@@ -210,8 +210,8 @@ def transient():
         "info_coolant.h5",
         "info_moderator.h5",
         "info_reflector.h5",
-        f"{name[0]}_init.rmc.State.h5",  # which is replaced by the file at the end of the time step for each time step
-        f"{name[0]}.rmc.innerproduct",
+        # f"{name[0]}_init.rmc.State.h5",  # which is replaced by the file at the end of the time step for each time step
+        # f"{name[0]}.rmc.innerproduct",
         "MeshTally1.h5",
         f"{name[1]}_init.dat.h5"         # which is replaced by the file at the end of the time step for each time step
     ]
@@ -223,8 +223,8 @@ def transient():
         # "info_reflector.h5",
         f"{name[0]}.rmc.out",
         f"{name[0]}.rmc.Tally",
-        f"{name[0]}.rmc.State.h5",
-        f"{name[0]}.rmc.innerproduct",
+        # f"{name[0]}.rmc.State.h5",
+        # f"{name[0]}.rmc.innerproduct",
         # "MeshTally1.h5",
         "MeshTally2.h5",
         # f"{name[1]}.dat.h5"
@@ -322,11 +322,12 @@ def transient():
 
             if order_flag == 0:
                 # Step.V.1. run RMC with post process
-                shutil.copyfile(os.path.join(script_dir, f'{name[0]}_init.rmc.State.h5'), os.path.join(script_dir, f'{name[0]}.rmc.State.h5'))
+                # shutil.copyfile(os.path.join(script_dir, f'{name[0]}_init.rmc.State.h5'), os.path.join(script_dir, f'{name[0]}.rmc.State.h5'))
                 os.system(run_MC)
                 n_k_converge, n_P_converge = MC_post(i, current_timestep_path, keff, std, keff_re_diff, L2_norm, Linf, re_ave)  # i and path are input parameters, and the rest of the list is updated
-                with h5py.File(os.path.join(script_dir, f"{name[0]}.rmc.State.h5"), "r") as source_file:
-                    rhow = source_file["kinetics/reactivity"][()]
+                # with h5py.File(os.path.join(script_dir, f"{name[0]}.rmc.State.h5"), "r") as source_file:
+                    # rhow = source_file["kinetics/reactivity"][()]
+                rhow = (keff[-1] - 1) / keff[-1]
                 current_power, params = transient_power_update(init_params, init_power, deltat, rhow)  # Update power and coupling.dat for UDF reading
 
                 # Step.V.2. run Fluent with post process
@@ -339,11 +340,12 @@ def transient():
                 th_converge = CFD_post(i, current_timestep_path, thermal_files, tmax, tmax_re_diff, tave, tave_re_diff)  # i and path are input parameters, and the rest of the list is updated
 
                 # Step.V.2. run RMC with post process
-                shutil.copyfile(os.path.join(script_dir, f'{name[0]}_init.rmc.State.h5'), os.path.join(script_dir, f'{name[0]}.rmc.State.h5'))
+                # shutil.copyfile(os.path.join(script_dir, f'{name[0]}_init.rmc.State.h5'), os.path.join(script_dir, f'{name[0]}.rmc.State.h5'))
                 os.system(run_MC)
                 n_k_converge, n_P_converge = MC_post(i, current_timestep_path, keff, std, keff_re_diff, L2_norm, Linf, re_ave)  # i and path are input parameters, and the rest of the list is updated
-                with h5py.File(os.path.join(script_dir, f"{name[0]}.rmc.State.h5"), "r") as source_file:
-                    rhow = source_file["kinetics/reactivity"][()]
+                # with h5py.File(os.path.join(script_dir, f"{name[0]}.rmc.State.h5"), "r") as source_file:
+                    # rhow = source_file["kinetics/reactivity"][()]
+                rhow = (keff[-1] - 1) / keff[-1]
                 current_power, params = transient_power_update(init_params, init_power, deltat, rhow)  # Update power and coupling.dat for UDF reading
 
             # Step.V.3. Coupling converges if and only if all the vectors and scalars of MC and CFD converge
@@ -370,14 +372,15 @@ def transient():
         power_time.append(current_power)
         power_re_factor_time.append(current_power/init_power)
         keff_time.append(keff[-1])
-        with h5py.File(os.path.join(script_dir, f"{name[0]}.rmc.State.h5"), "r") as source_file:
-            reactivity_time.append(source_file["kinetics/reactivity"][()])
+        # with h5py.File(os.path.join(script_dir, f"{name[0]}.rmc.State.h5"), "r") as source_file:
+            # reactivity_time.append(source_file["kinetics/reactivity"][()])
+        reactivity_time.append(rhow)
         tmax_time.append(tmax[-1])
         tave_time.append(tave[-1])
 
         # Step.VIII. Replace the initial condition of the next time step with the end condition of the current time step, and
         # it is not advisable to delete the _init file after the last time step because you may have to consider subsequent transient calculations
-        shutil.copyfile(os.path.join(script_dir, f"{name[0]}.rmc.State.h5"), os.path.join(script_dir, f"{name[0]}_init.rmc.State.h5"))
+        # shutil.copyfile(os.path.join(script_dir, f"{name[0]}.rmc.State.h5"), os.path.join(script_dir, f"{name[0]}_init.rmc.State.h5"))
         shutil.copyfile(os.path.join(script_dir, f"{name[1]}.dat.h5"), os.path.join(script_dir, f"{name[1]}_init.dat.h5"))
 
     # Step.IX. Output result variations with time
